@@ -57,7 +57,9 @@ public class User {
         this.password = password;
     }
 
+    //------------------------------------------------------------------------------------------------------------------
     // Getters and Setters
+
     public Integer getId() {
         return id;
     }
@@ -113,6 +115,8 @@ public class User {
 //    public void setTeams(Set<Team> teams) {
 //        this.teams = teams;
 //    }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     @Override
     public boolean equals(Object o) {
