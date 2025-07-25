@@ -52,7 +52,7 @@ public class UserService {
     }
 
     // Flexible search - first/last, first + last, last + first
-    public List<User> searchUsersByFullName(String keyword) {
+    public List<User> searchUsersByName(String keyword) {
         String[] parts = keyword.trim().split("\\s+");
         if (parts.length == 1) {
             List<User> byFirst = userRepository.findByFirstNameContainingIgnoreCase(parts[0]);
