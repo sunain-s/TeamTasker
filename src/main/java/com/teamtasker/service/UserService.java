@@ -5,11 +5,7 @@ import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -40,6 +36,9 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Search methods
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -52,19 +51,54 @@ public class UserService {
         return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found. Email: " + email));
     }
 
-    public List<User> searchUserByFirstName(String firstName) {
-        return userRepository.findByFirstNameContainingIgnoreCase(firstName);
+    // Flexible search - first/last, first + last, last + first
+    public List<User> searchUsersByFullName(String keyword) {
+        String[] parts = keyword.trim().split("\\s+");
+        if (parts.length == 1) {
+            List<User> byFirst = userRepository.findByFirstNameContainingIgnoreCase(parts[0]);
+            List<User> byLast = userRepository.findByLastNameContainingIgnoreCase(parts[0]);
+            Set<User> combined = new HashSet<>(byFirst);
+            combined.addAll(byLast);
+            return new ArrayList<>(combined);
+
+        } else if (parts.length > 1) {
+            String first = parts[0];
+            String last = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
+            List<User> forward = userRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(first, last);
+            List<User> reverse = userRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(last, first);
+            Set<User> combined = new HashSet<>(forward);
+            combined.addAll(reverse);
+            return new ArrayList<>(combined);
+        }
+        return Collections.emptyList();
     }
 
-    public List<User> searchUserByLastName(String lastName) {
-        return userRepository.findByLastNameContainingIgnoreCase(lastName);
+    //------------------------------------------------------------------------------------------------------------------
+    // User Management
+
+    public User updateUser(User updatedUser) {
+        User existingUser = userRepository.findById(updatedUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found. Id: " + updatedUser.getId()));
+        existingUser.setFirstName(updatedUser.getFirstName());
+        existingUser.setLastName(updatedUser.getLastName());
+        existingUser.setEmail(updatedUser.getEmail());
+        return userRepository.save(existingUser);
     }
 
-    public List<User> searchUsersByFullName(String name) {
-        List<User> byFirst = userRepository.findByFirstNameContainingIgnoreCase(name);
-        List<User> byLast = userRepository.findByLastNameContainingIgnoreCase(name);
-        Set<User> combined =  new HashSet<>(byFirst);
-        combined.addAll(byLast);
-        return new ArrayList<>(combined);
+    public void deleteUser(Integer userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found. Id: " + userId);
+        }
+        userRepository.deleteById(userId);
+    }
+
+    public void changePassword(Integer userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found. Id: " + userId));
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
