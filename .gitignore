@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Secret environment files
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
