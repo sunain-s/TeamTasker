@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/auth")
@@ -44,7 +41,19 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String loginForm() {
+    public String loginForm(Model model,
+                            @RequestParam(value = "error", required = false) String error,
+                            @RequestParam(value = "logout", required = false) String logout,
+                            @RequestParam(value = "registered",  required = false) String registered) {
+        if (error != null) {
+            model.addAttribute("error_message", "Invalid username or password");
+        }
+        if (logout != null) {
+            model.addAttribute("logout_message", "You have been logged out");
+        }
+        if (registered != null) {
+            model.addAttribute("register_message", "Registration successful! Please log in");
+        }
         return "auth/login";
     }
 }

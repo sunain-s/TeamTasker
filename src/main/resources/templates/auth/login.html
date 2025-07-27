@@ -1,5 +1,28 @@
-<form th:action="@{/login}" method="post">
-    <input type="text" name="username" placeholder="Username" /><br/>
-    <input type="password" name="password" placeholder="Password" /><br/>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+</head>
+<body>
+<h1>Login</h1>
+
+<!-- Display registration success message -->
+<p th:if="${register_message}" th:text="${register_message}" style="color: green;"></p>
+
+<!-- Display logout message -->
+<p th:if="${logout_message}" th:text="${logout_message}" style="color: green;"></p>
+
+<!-- Display login error message -->
+<p th:if="${error_message}" th:text="${error_message}" style="color: red;"></p>
+
+<form th:action="@{/auth/login}" method="post">
+    <label for="username">Username:</label>
+    <input type="text" name="username" /><br/>
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" /><br/>
+
     <button type="submit">Login</button>
 </form>
+</body>
+</html>
