@@ -2,12 +2,14 @@ package com.teamtasker.auth;
 
 import com.teamtasker.entity.User;
 import com.teamtasker.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/auth")
@@ -27,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
+    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "auth/register";
         }
@@ -37,22 +39,21 @@ public class AuthController {
             model.addAttribute("error_message", e.getMessage());
             return "auth/register";
         }
-        return "redirect:/auth/login?registered";
+        redirectAttributes.addFlashAttribute("register_message", "Registration successful! Please log in");
+        return "redirect:/auth/login";
     }
 
     @GetMapping("/login")
     public String loginForm(Model model,
                             @RequestParam(value = "error", required = false) String error,
-                            @RequestParam(value = "logout", required = false) String logout,
-                            @RequestParam(value = "registered",  required = false) String registered) {
+                            HttpServletRequest request) {
         if (error != null) {
             model.addAttribute("error_message", "Invalid username or password");
         }
-        if (logout != null) {
-            model.addAttribute("logout_message", "You have been logged out");
-        }
-        if (registered != null) {
-            model.addAttribute("register_message", "Registration successful! Please log in");
+        String logoutMessage = (String) request.getSession().getAttribute("logout_message");
+        if (logoutMessage != null) {
+            model.addAttribute("logout_message", logoutMessage);
+            request.getSession().removeAttribute("logout_message");
         }
         return "auth/login";
     }

@@ -6,13 +6,9 @@
 <body>
 <h1>Login</h1>
 
-<!-- Display registration success message -->
+<!-- Display registration success, logout, login error messages -->
 <p th:if="${register_message}" th:text="${register_message}" style="color: green;"></p>
-
-<!-- Display logout message -->
 <p th:if="${logout_message}" th:text="${logout_message}" style="color: green;"></p>
-
-<!-- Display login error message -->
 <p th:if="${error_message}" th:text="${error_message}" style="color: red;"></p>
 
 <form th:action="@{/auth/login}" method="post">
