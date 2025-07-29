@@ -44,12 +44,13 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String loginForm(Model model,
-                            @RequestParam(value = "error", required = false) String error,
-                            HttpServletRequest request) {
-        if (error != null) {
-            model.addAttribute("error_message", "Invalid username or password");
+    public String loginForm(Model model, HttpServletRequest request) {
+        String errorMessage = (String) request.getSession().getAttribute("error_message");
+        if (errorMessage != null) {
+            model.addAttribute("error_message", errorMessage);
+            request.getSession().removeAttribute("error_message");
         }
+
         String logoutMessage = (String) request.getSession().getAttribute("logout_message");
         if (logoutMessage != null) {
             model.addAttribute("logout_message", logoutMessage);

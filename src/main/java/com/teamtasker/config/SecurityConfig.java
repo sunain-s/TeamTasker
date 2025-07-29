@@ -1,5 +1,6 @@
 package com.teamtasker.config;
 
+import com.teamtasker.auth.CustomAuthFailureHandler;
 import com.teamtasker.auth.CustomLogoutSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    @Autowired
+    private CustomAuthFailureHandler customAuthFailureHandler;
 
     @Autowired
     private CustomLogoutSuccessHandler customLogoutSuccessHandler;
@@ -32,6 +36,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/auth/login")
                         .defaultSuccessUrl("/", true)
+                        .failureHandler(customAuthFailureHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout

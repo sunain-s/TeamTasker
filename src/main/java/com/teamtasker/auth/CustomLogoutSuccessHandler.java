@@ -15,9 +15,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
     public void onLogoutSuccess(HttpServletRequest request,
                                 HttpServletResponse response,
                                 Authentication authentication) throws IOException {
-        if (request.getSession(false) != null) {
-            request.getSession().setAttribute("logout_message", "Successfully logged out");
-        }
+        request.getSession(true).setAttribute("logout_message", "Successfully logged out");
         response.sendRedirect("/auth/login");
     }
 }
