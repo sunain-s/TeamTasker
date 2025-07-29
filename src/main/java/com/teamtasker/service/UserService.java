@@ -1,6 +1,10 @@
 package com.teamtasker.service;
 
 import com.teamtasker.entity.User;
+import com.teamtasker.exception.DuplicateEmailException;
+import com.teamtasker.exception.DuplicateUsernameException;
+import com.teamtasker.exception.InvalidChangePasswordException;
+import com.teamtasker.exception.UserNotFoundException;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,11 +26,11 @@ public class UserService {
 
     public User registerUser(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Username is already in use");
+            throw new DuplicateUsernameException("Username is already in use");
         }
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already in use");
+            throw new DuplicateEmailException("Email is already in use");
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -45,11 +49,11 @@ public class UserService {
     }
 
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found. Username: " + username));
+        return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found. Username: " + username));
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found. Email: " + email));
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found. Email: " + email));
     }
 
     // Flexible search - first/last, first + last, last + first
@@ -79,7 +83,7 @@ public class UserService {
 
     public User updateUser(User updatedUser) {
         User existingUser = userRepository.findById(updatedUser.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found. Id: " + updatedUser.getId()));
+                .orElseThrow(() -> new UserNotFoundException("User not found. Id: " + updatedUser.getId()));
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
         existingUser.setEmail(updatedUser.getEmail());
@@ -88,16 +92,16 @@ public class UserService {
 
     public void deleteUser(Integer userId) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found. Id: " + userId);
+            throw new UserNotFoundException("User not found. Id: " + userId);
         }
         userRepository.deleteById(userId);
     }
 
     public void changePassword(Integer userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found. Id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found. Id: " + userId));
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
+            throw new InvalidChangePasswordException("Current password is incorrect");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
