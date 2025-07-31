@@ -28,18 +28,18 @@ public class User {
     @Column(nullable = false, length = 50)
     private String lastName;
 
-    @NotBlank
+    @NotBlank(message = "Email is required")
     @Email(message = "Please enter a valid email")
     @Size(max = 100)
     @Column(unique = true, nullable = false, length = 100)
     private String email;
 
     @NotBlank(message = "Username is required")
-    @Size(max = 30)
+    @Size(min = 4, max = 30, message = "Username must be between 4 and 30 characters")
     @Column(unique = true, nullable = false, length = 30)
     private String username;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     @JsonIgnore
     @Column(nullable = false)

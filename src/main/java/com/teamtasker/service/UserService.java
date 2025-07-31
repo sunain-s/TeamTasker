@@ -22,30 +22,20 @@ public class UserService {
     }
 
     public User registerUser(User user) {
-        Map<String, String> errors = new HashMap<>();
-
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            errors.put("username", "Username is already taken");
-        }
-
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            errors.put("email", "Email is already taken");
-        }
-
-        if (user.getPassword() == null || user.getPassword().length() < 8) {
-            errors.put("password", "Password must be at least 8 characters");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new UserValidationException(errors);
-        }
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     public boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    public boolean isUsernameTaken(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+
+    public boolean isEmailTaken(String email) {
+        return userRepository.findByEmail(email).isPresent();
     }
 
     //------------------------------------------------------------------------------------------------------------------

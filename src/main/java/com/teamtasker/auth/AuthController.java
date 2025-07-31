@@ -24,14 +24,27 @@ public class AuthController {
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        model.addAttribute("user", new User());
+        if (!model.containsAttribute("user")) {
+            model.addAttribute("user", new User());
+        }
         return "auth/register";
     }
 
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+        if (userService.isUsernameTaken(user.getUsername())) {
+            result.rejectValue("username", null, "Username already exists");
+        }
+
+        if (userService.isEmailTaken(user.getEmail())) {
+            result.rejectValue("email", null, "Email already exists");
+        }
+
+        // Add validation errors and form data as flash attributes for the redirect, PostRedirectGet pattern
         if (result.hasErrors()) {
-            return "auth/register";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.user", result);
+            redirectAttributes.addFlashAttribute("user", user);
+            return "redirect:/auth/register";
         }
 
         userService.registerUser(user);
