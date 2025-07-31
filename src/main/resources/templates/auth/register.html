@@ -1,25 +1,39 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>Register</title>
+    <style>
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
 <h1>Register</h1>
+
+<!-- Display field-specific validation errors -->
 <form th:action="@{/auth/register}" method="post" th:object="${user}">
     <label for="firstName">First Name:</label>
-    <input type="text" th:field="*{firstName}" /><br/>
+    <input type="text" id="firstName" th:field="*{firstName}" /><br/>
 
     <label for="lastName">Last Name:</label>
-    <input type="text" th:field="*{lastName}" /><br/>
+    <input type="text" id="lastName" th:field="*{lastName}" /><br/>
 
     <label for="email">Email:</label>
-    <input type="email" th:field="*{email}" /><br/>
+    <input type="email" id="email" th:field="*{email}" /><br/>
+    <div class="error" th:if="${validationErrors != null and validationErrors.containsKey('email')}"
+         th:text="${validationErrors.get('email')}"></div>
 
     <label for="username">Username:</label>
-    <input type="text" th:field="*{username}" /><br/>
+    <input type="text" id="username" th:field="*{username}" /><br/>
+    <div class="error" th:if="${validationErrors != null and validationErrors.containsKey('username')}"
+         th:text="${validationErrors.get('username')}"></div>
 
     <label for="password">Password:</label>
-    <input type="password" th:field="*{password}" /><br/>
+    <input type="password" id="password" th:field="*{password}" /><br/>
+    <div class="error" th:if="${validationErrors != null and validationErrors.containsKey('password')}"
+         th:text="${validationErrors.get('password')}"></div>
 
     <button type="submit">Register</button>
 </form>

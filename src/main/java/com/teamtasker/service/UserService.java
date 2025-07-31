@@ -1,10 +1,7 @@
 package com.teamtasker.service;
 
 import com.teamtasker.entity.User;
-import com.teamtasker.exception.DuplicateEmailException;
-import com.teamtasker.exception.DuplicateUsernameException;
-import com.teamtasker.exception.InvalidChangePasswordException;
-import com.teamtasker.exception.UserNotFoundException;
+import com.teamtasker.exception.*;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,12 +22,22 @@ public class UserService {
     }
 
     public User registerUser(User user) {
+        Map<String, String> errors = new HashMap<>();
+
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new DuplicateUsernameException("Username is already in use");
+            errors.put("username", "Username is already taken");
         }
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new DuplicateEmailException("Email is already in use");
+            errors.put("email", "Email is already taken");
+        }
+
+        if (user.getPassword() == null || user.getPassword().length() < 8) {
+            errors.put("password", "Password must be at least 8 characters");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new UserValidationException(errors);
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));

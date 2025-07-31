@@ -1,5 +1,6 @@
 package com.teamtasker.exception;
 
+import com.teamtasker.entity.User;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,23 +14,18 @@ public class GlobalExceptionHandler {
         return "error/404";
     }
 
-    @ExceptionHandler(DuplicateUsernameException.class)
-    public String handleDuplicateUsernameException(DuplicateUsernameException e, Model model) {
-        model.addAttribute("username_error_message", e.getMessage());
+    @ExceptionHandler(UserValidationException.class)
+    public String handleUserValidationException(UserValidationException e, Model model) {
+        model.addAttribute("validationErrors", e.getErrorMessages());
+        model.addAttribute("user", new User());
         return "auth/register";
     }
 
-    @ExceptionHandler(DuplicateEmailException.class)
-    public String handleDuplicateEmailException(DuplicateEmailException e, Model model) {
-        model.addAttribute("email_error_message", e.getMessage());
-        return "auth/register";
-    }
-
-    @ExceptionHandler(InvalidLoginPasswordException.class)
-    public String handleInvalidLoginPasswordException(InvalidChangePasswordException e, Model model) {
-        model.addAttribute("password_login_error_message", e.getMessage());
-        return "auth/login";
-    }
+//    @ExceptionHandler(InvalidLoginException.class)
+//    public String handleInvalidLoginException(InvalidChangePasswordException e, Model model) {
+//        model.addAttribute("login_error_message", e.getMessage());
+//        return "auth/login";
+//    }
 
     @ExceptionHandler(InvalidChangePasswordException.class)
     public String handleInvalidChangePasswordException(InvalidChangePasswordException e, Model model) {
