@@ -29,7 +29,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/auth/**", "/css/**", "/js/**", "/error", "/error/**").permitAll()
                         .anyRequest()
                         .authenticated()
                 )
@@ -44,6 +44,9 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(false)
                         .permitAll()
+                )
+                .exceptionHandling(e -> e
+                        .accessDeniedPage("/error/403")
                 );
         return http.build();
     }

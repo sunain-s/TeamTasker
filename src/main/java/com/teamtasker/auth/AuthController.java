@@ -1,10 +1,12 @@
 package com.teamtasker.auth;
 
 import com.teamtasker.entity.User;
+import com.teamtasker.exception.UserNotFoundException;
 import com.teamtasker.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -40,7 +42,7 @@ public class AuthController {
             result.rejectValue("email", null, "Email already exists");
         }
 
-        // Add validation errors and form data as flash attributes for the redirect, PostRedirectGet pattern
+        // Validation errors + form data cleared on page reload, PostRedirectGet pattern
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.user", result);
             redirectAttributes.addFlashAttribute("user", user);
@@ -66,6 +68,16 @@ public class AuthController {
             request.getSession().removeAttribute("logout_message");
         }
         return "auth/login";
+    }
+
+    @GetMapping("/test-404")
+    public String test404() {
+        throw new UserNotFoundException("Test user not found.");
+    }
+
+    @GetMapping("/test-500")
+    public String test500() {
+        throw new RuntimeException("Deliberate test error.");
     }
 }
 

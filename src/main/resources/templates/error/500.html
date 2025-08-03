@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Internal Server Error</title>
+    <style>
+        body { text-align: center; font-family: sans-serif; }
+        .container { margin-top: 100px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>500 - Internal Server Error</h1>
+    <p th:text="${generic_error_message} ?: 'Something went wrong. Please try again later.'"></p>
+    <a href="/" style="text-decoration: underline;">Return Home</a>
+</div>
+</body>
+</html>

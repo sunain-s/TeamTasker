@@ -1,9 +1,11 @@
 package com.teamtasker.exception;
 
 import com.teamtasker.entity.User;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,5 +40,11 @@ public class GlobalExceptionHandler {
         model.addAttribute("generic_error_message", "An unexpected error occurred");
         e.printStackTrace();
         return "error/500";
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public String handleAccessDenied(AccessDeniedException ex, Model model) {
+        model.addAttribute("user_error_message", "You don't have permission to access this page.");
+        return "error/403";
     }
 }
