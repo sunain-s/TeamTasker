@@ -9,7 +9,6 @@ import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Objects;
 
-
 @Entity
 @Table(name = "users")
 public class User {
@@ -45,6 +44,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER; // Default role for new users
+
 //    @JsonIgnore
 //    @ManyToMany(mappedBy = "members")
 //    private Set<Team> teams = new HashSet<>();
@@ -57,6 +60,16 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
+        this.role = Role.USER; // Set default role
+    }
+
+    public User(String firstName, String lastName, String email, String username, String password, Role role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.role = role;
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -110,6 +123,14 @@ public class User {
         this.password = password;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
 //    public Set<Team> getTeams() {
 //        return teams;
 //    }
@@ -136,11 +157,12 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", lastName='" + lastName + '\'' +
+                "id=" + id +
                 ", firstName='" + firstName + '\'' +
-                ", id=" + id +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", username='" + username + '\'' +
+                ", role=" + role +
                 '}';
     }
 }

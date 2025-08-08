@@ -1,5 +1,6 @@
 package com.teamtasker.repository;
 
+import com.teamtasker.entity.Role;
 import com.teamtasker.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,5 @@ public interface UserRepository extends JpaRepository<User,Integer> {
     List<User> findByFirstNameContainingIgnoreCase(String firstName);
     List<User> findByLastNameContainingIgnoreCase(String lastName);
     List<User> findByFirstNameIgnoreCaseAndLastNameIgnoreCase(String firstName, String lastName);
+    List<User> findByRole(Role role);
 }

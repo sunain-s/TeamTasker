@@ -1,5 +1,6 @@
 package com.teamtasker.service;
 
+import com.teamtasker.entity.Role;
 import com.teamtasker.entity.User;
 import com.teamtasker.exception.*;
 import com.teamtasker.repository.UserRepository;
@@ -23,6 +24,18 @@ public class UserService {
 
     public User registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    public User registerAdmin(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.ADMIN);
+        return userRepository.save(user);
+    }
+
+    public User registerManager(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.MANAGER);
         return userRepository.save(user);
     }
 
@@ -102,5 +115,19 @@ public class UserService {
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Role Management (Admin functions)
+
+    public void updateUserRole(Integer userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found. Id: " + userId));
+        user.setRole(newRole);
+        userRepository.save(user);
+    }
+
+    public List<User> getUsersByRole(Role role) {
+        return userRepository.findByRole(role);
     }
 }

@@ -39,4 +39,10 @@ public class CustomErrorController implements ErrorController {
         model.addAttribute("generic_error_message", "Unexpected error occurred.");
         return "error/500";
     }
+
+    @RequestMapping("/error/403")
+    public String handleAccessDenied(Model model) {
+        model.addAttribute("user_error_message", "You don't have permission to access this page.");
+        return "error/403";
+    }
 }
