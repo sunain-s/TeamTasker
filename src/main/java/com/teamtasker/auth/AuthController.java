@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -50,7 +51,7 @@ public class AuthController {
             redirectAttributes.addFlashAttribute("user", user);
             return "redirect:/auth/register";
         }
-        
+
         user.setRole(Role.USER);
         userService.registerUser(user);
         redirectAttributes.addFlashAttribute("register_message", "Registration successful! Please log in");
@@ -74,8 +75,11 @@ public class AuthController {
     }
 
     @GetMapping("/test-403")
-    public String test403() {
-        throw new AccessDeniedException("Manual 403 test");
+    @PreAuthorize("hasRole('ADMIN')")
+    public String test403(Authentication authentication) {
+        System.out.println("User: " + authentication.getName());
+        System.out.println("Authorities: " + authentication.getAuthorities());
+        return "dashboard";
     }
 
     @GetMapping("/test-404")
@@ -86,16 +90,6 @@ public class AuthController {
     @GetMapping("/test-500")
     public String test500() {
         throw new RuntimeException("Deliberate server error.");
-    }
-
-    @PostMapping("/create-admin") // Temporary for testing
-    public String createAdmin() {
-        if (!userService.isUsernameTaken("admin")) {
-            User admin = new User("Admin", "User", "admin@test.com", "admin", "password123");
-            userService.registerAdmin(admin);
-            return "redirect:/auth/login?message=Admin created";
-        }
-        return "redirect:/auth/login?message=Admin already exists";
     }
 }
 
