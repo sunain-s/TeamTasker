@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -46,11 +47,22 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.USER; // Default role for new users
+    private Role role = Role.USER;
 
-//    @JsonIgnore
-//    @ManyToMany(mappedBy = "members")
-//    private Set<Team> teams = new HashSet<>();
+    // Teams where this user is the owner
+    @JsonIgnore
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private Set<Team> ownedTeams = new HashSet<>();
+
+    // Teams where this user is a manager
+    @JsonIgnore
+    @ManyToMany(mappedBy = "managers", fetch = FetchType.LAZY)
+    private Set<Team> managedTeams = new HashSet<>();
+
+    // Teams where this user is a member (including managed teams)
+    @JsonIgnore
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    private Set<Team> memberTeams = new HashSet<>();
 
     public User() {}
 
@@ -60,7 +72,6 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.role = Role.USER; // Set default role
     }
 
     public User(String firstName, String lastName, String email, String username, String password, Role role) {
@@ -70,6 +81,25 @@ public class User {
         this.username = username;
         this.password = password;
         this.role = role;
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Query Methods
+
+    public boolean isOwnerOf(Team team) {
+        return ownedTeams.contains(team);
+    }
+
+    public boolean isManagerOf(Team team) {
+        return managedTeams.contains(team);
+    }
+
+    public boolean isMemberOf(Team team) {
+        return memberTeams.contains(team);
+    }
+
+    public boolean hasManagementRightsFor(Team team) {
+        return isOwnerOf(team) || isManagerOf(team) || this.role == Role.ADMIN;
     }
 
     //------------------------------------------------------------------------------------------------------------------
