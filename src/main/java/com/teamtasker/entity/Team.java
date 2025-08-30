@@ -61,6 +61,7 @@ public class Team {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    //------------------------------------------------------------------------------------------------------------------
 
     public Team() {
         this.createdAt = LocalDateTime.now();
@@ -79,6 +80,9 @@ public class Team {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Query Methods
 
     public boolean containsMember(User user) {
         return this.members.contains(user);
@@ -104,7 +108,9 @@ public class Team {
         return isOwner(user) || isManager(user) || user.getRole() == Role.ADMIN;
     }
 
+    //------------------------------------------------------------------------------------------------------------------
     // Getters and Setters
+
     public Integer getId() {
         return id;
     }
@@ -182,6 +188,8 @@ public class Team {
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     @Override
     public boolean equals(Object o) {

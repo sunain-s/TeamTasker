@@ -64,6 +64,8 @@ public class User {
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     private Set<Team> memberTeams = new HashSet<>();
 
+    //------------------------------------------------------------------------------------------------------------------
+
     public User() {}
 
     public User(String firstName, String lastName, String email, String username, String password) {
@@ -129,6 +131,10 @@ public class User {
         this.lastName = lastName;
     }
 
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -161,13 +167,42 @@ public class User {
         this.role = role;
     }
 
-//    public Set<Team> getTeams() {
-//        return teams;
-//    }
-//
-//    public void setTeams(Set<Team> teams) {
-//        this.teams = teams;
-//    }
+    public Set<Team> getOwnedTeams() {
+        return ownedTeams;
+    }
+
+    public void setOwnedTeams(Set<Team> ownedTeams) {
+        this.ownedTeams = ownedTeams;
+    }
+
+    public Set<Team> getManagedTeams() {
+        return managedTeams;
+    }
+
+    public void setManagedTeams(Set<Team> managedTeams) {
+        this.managedTeams = managedTeams;
+    }
+
+    public Set<Team> getMemberTeams() {
+        return memberTeams;
+    }
+
+    public void setMemberTeams(Set<Team> memberTeams) {
+        this.memberTeams = memberTeams;
+    }
+
+    public Set<Team> getTeamsWithManagementRights() {
+        Set<Team> managementTeams = new HashSet<>(ownedTeams);
+        managementTeams.addAll(managedTeams);
+        return managementTeams;
+    }
+
+    public Set<Team> getRegularMemberTeams() {
+        Set<Team> regularTeams = new HashSet<>(memberTeams);
+        regularTeams.removeAll(ownedTeams);
+        regularTeams.removeAll(managedTeams);
+        return regularTeams;
+    }
 
     //------------------------------------------------------------------------------------------------------------------
 
