@@ -66,26 +66,12 @@ public class UserService {
         return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found. Email: " + email));
     }
 
-    // Flexible search - first/last, first + last, last + first
-    public List<User> searchUsersByName(String keyword) {
-        String[] parts = keyword.trim().split("\\s+");
-        if (parts.length == 1) {
-            List<User> byFirst = userRepository.findByFirstNameContainingIgnoreCase(parts[0]);
-            List<User> byLast = userRepository.findByLastNameContainingIgnoreCase(parts[0]);
-            Set<User> combined = new HashSet<>(byFirst);
-            combined.addAll(byLast);
-            return new ArrayList<>(combined);
-
-        } else if (parts.length > 1) {
-            String first = parts[0];
-            String last = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
-            List<User> forward = userRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(first, last);
-            List<User> reverse = userRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(last, first);
-            Set<User> combined = new HashSet<>(forward);
-            combined.addAll(reverse);
-            return new ArrayList<>(combined);
+    // Flexible search - username, first/last, first + last, last + first
+    public List<User> searchUsers(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        return userRepository.searchByNameOrUsername(searchTerm.trim());
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -129,5 +115,31 @@ public class UserService {
 
     public List<User> getUsersByRole(Role role) {
         return userRepository.findByRole(role);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Statistics
+
+    public List<User> getUsersNotInTeam(Integer teamId) {
+        return userRepository.findUsersNotInTeam(teamId);
+    }
+
+    public long getUserCountByRole(Role role) {
+        return userRepository.countByRole(role);
+    }
+
+    public Map<Role, Long> getUserCountsByRole() {
+        Map<Role, Long> counts = new HashMap<>();
+        for (Role role : Role.values()) {
+            counts.put(role, getUserCountByRole(role));
+        }
+        return counts;
+    }
+
+    public Map<String, Object> getUserStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUsers", userRepository.count());
+        stats.put("usersByRole", getUserCountsByRole());
+        return stats;
     }
 }
