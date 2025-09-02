@@ -5,6 +5,8 @@ import com.teamtasker.entity.User;
 import com.teamtasker.exception.*;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -54,8 +56,8 @@ public class UserService {
     //------------------------------------------------------------------------------------------------------------------
     // Search methods
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
     }
 
     public User getUserByUsername(String username) {
@@ -67,11 +69,11 @@ public class UserService {
     }
 
     // Flexible search - username, first/last, first + last, last + first
-    public List<User> searchUsers(String searchTerm) {
+    public Page<User> searchUsers(String searchTerm, Pageable pageable) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty(pageable);
         }
-        return userRepository.searchByNameOrUsername(searchTerm.trim());
+        return userRepository.searchByNameOrUsername(searchTerm.trim(), pageable);
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -113,15 +115,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<User> getUsersByRole(Role role) {
-        return userRepository.findByRole(role);
+    public Page<User> getUsersByRole(Role role, Pageable pageable) {
+        return userRepository.findByRole(role, pageable);
     }
 
     //------------------------------------------------------------------------------------------------------------------
     // Statistics
 
-    public List<User> getUsersNotInTeam(Integer teamId) {
-        return userRepository.findUsersNotInTeam(teamId);
+    public Page<User> getUsersNotInTeam(Integer teamId, Pageable pageable) {
+        return userRepository.findUsersNotInTeam(teamId, pageable);
     }
 
     public long getUserCountByRole(Role role) {
