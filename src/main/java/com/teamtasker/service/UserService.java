@@ -4,6 +4,7 @@ import com.teamtasker.entity.Role;
 import com.teamtasker.entity.User;
 import com.teamtasker.exception.*;
 import com.teamtasker.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -58,6 +60,10 @@ public class UserService {
 
     public Page<User> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
+    }
+
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found. UserID: " + userId));
     }
 
     public User getUserByUsername(String username) {
