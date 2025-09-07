@@ -3,6 +3,7 @@ package com.teamtasker.service;
 import com.teamtasker.entity.Role;
 import com.teamtasker.entity.Team;
 import com.teamtasker.entity.User;
+import com.teamtasker.exception.UserNotFoundException;
 import com.teamtasker.repository.TeamRepository;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,6 @@ public class TeamService {
             throw new IllegalArgumentException("Team name already exists: " + teamName); //TeamAlreadyExistsException
         }
         Team team = new Team(teamName, description, owner);
-        team.getManagers().add(owner);
-        team.getMembers().add(owner);
         return teamRepository.save(team);
     }
 
@@ -80,6 +79,39 @@ public class TeamService {
         team.setIsActive(true);
         teamRepository.save(team);
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Member Management
+
+    public void addMemberToTeam(Integer teamId, String username, User currUser) {
+        Team team = getTeamById(teamId);
+        validateManagementAccess(team, currUser);
+        User newMember = userRepository.findByUsername(username).orElseThrow(()
+                -> new UserNotFoundException("User not found. Username: " + username));
+        if (team.isMember(newMember)) {
+            throw new IllegalArgumentException("User is already a member of this team");
+        }
+        team.getMembers().add(newMember);
+        teamRepository.save(team);
+    }
+
+    public void removeMemberFromTeam(Integer teamId, String username, User currUser) {
+        Team team = getTeamById(teamId);
+        validateManagementAccess(team, currUser);
+        User memberToRemove = userRepository.findByUsername(username).orElseThrow(()
+                -> new UserNotFoundException("User not found. Username: " + username));
+        if (!team.isMember(memberToRemove)) {
+            throw new IllegalArgumentException("User is not a member of this team");
+        }
+        if (team.isOwner(memberToRemove)) {
+            throw new IllegalArgumentException("Cannot remove owner from team");
+        }
+        team.getMembers().remove(memberToRemove);
+        team.getManagers().remove(memberToRemove);
+        teamRepository.save(team);
+    }
+
+    
 
     //------------------------------------------------------------------------------------------------------------------
     //
