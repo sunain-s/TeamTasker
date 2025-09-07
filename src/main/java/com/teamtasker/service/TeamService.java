@@ -88,6 +88,7 @@ public class TeamService {
         validateManagementAccess(team, currUser);
         User newMember = userRepository.findByUsername(username).orElseThrow(()
                 -> new UserNotFoundException("User not found. Username: " + username));
+
         if (team.isMember(newMember)) {
             throw new IllegalArgumentException("User is already a member of this team");
         }
@@ -100,8 +101,9 @@ public class TeamService {
         validateManagementAccess(team, currUser);
         User memberToRemove = userRepository.findByUsername(username).orElseThrow(()
                 -> new UserNotFoundException("User not found. Username: " + username));
+
         if (!team.isMember(memberToRemove)) {
-            throw new IllegalArgumentException("User is not a member of this team");
+            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
         }
         if (team.isOwner(memberToRemove)) {
             throw new IllegalArgumentException("Cannot remove owner from team");
@@ -111,7 +113,41 @@ public class TeamService {
         teamRepository.save(team);
     }
 
-    
+    public void promoteToManager(Integer teamId, String username, User currUser) {
+        Team team = getTeamById(teamId);
+        if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("Only team owners or admins can promote members to managers"); // TeamAccessException
+        }
+        User userToPromote = userRepository.findByUsername(username).orElseThrow(()
+                -> new UserNotFoundException("User not found. Username: " + username));
+
+        if (!team.isMember(userToPromote)) {
+            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
+        }
+        if (team.isManager(userToPromote)) {
+            throw new IllegalArgumentException("User is already a manager of this team");
+        }
+        team.getManagers().add(userToPromote);
+        teamRepository.save(team);
+    }
+
+    public void demoteFromManager(Integer teamId, String username, User currUser) {
+        Team team = getTeamById(teamId);
+        if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("Only team owners or admins can demote members from managers"); // TeamAccessException
+        }
+        User userToDemote = userRepository.findByUsername(username).orElseThrow(()
+                -> new UserNotFoundException("User not found. Username: " + username));
+
+        if (!team.isManager(userToDemote)) {
+            throw new IllegalArgumentException("User is not a manager of this team");
+        }
+        if (team.isOwner(userToDemote)) {
+            throw new IllegalArgumentException("Cannot demote team owner from manager role");
+        }
+        team.getManagers().remove(userToDemote);
+        teamRepository.save(team);
+    }
 
     //------------------------------------------------------------------------------------------------------------------
     //
