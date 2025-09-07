@@ -71,9 +71,7 @@ public class Team {
         this();
         this.name = name;
         this.description = description;
-        this.owner = owner;
-        this.managers.add(owner);
-        this.members.add(owner);
+        this.setOwner(owner);
     }
 
     @PreUpdate
@@ -157,6 +155,8 @@ public class Team {
 
     public void setOwner(User owner) {
         this.owner = owner;
+        this.managers.add(owner);
+        this.members.add(owner);
     }
 
     public Set<User> getManagers() {

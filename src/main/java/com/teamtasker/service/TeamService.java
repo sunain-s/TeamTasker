@@ -149,6 +149,25 @@ public class TeamService {
         teamRepository.save(team);
     }
 
+    // transferring ownership demotes previous owner to manager
+    public void transferOwnership(Integer teamId, String newOwnerUsername, User currUser) {
+        Team team = getTeamById(teamId);
+        if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("Only team owners or admins can transfer team ownership"); // TeamAccessException
+        }
+        User newOwner = userRepository.findByUsername(newOwnerUsername).orElseThrow(()
+                -> new UserNotFoundException("User not found. Username: " + newOwnerUsername));
+
+        if (!team.isMember(newOwner)) {
+            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
+        }
+        if (team.isOwner(newOwner)) {
+            throw new IllegalArgumentException("User is already the owner of this team");
+        }
+        team.setOwner(newOwner);
+        teamRepository.save(team);
+    }
+
     //------------------------------------------------------------------------------------------------------------------
     //
 
