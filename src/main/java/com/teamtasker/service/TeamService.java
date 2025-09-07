@@ -7,8 +7,12 @@ import com.teamtasker.exception.UserNotFoundException;
 import com.teamtasker.repository.TeamRepository;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -27,7 +31,7 @@ public class TeamService {
     // Team Management
 
     public Team createTeam(String teamName, String description, User owner) {
-        if (teamRepository.findByName(teamName).isPresent()) {
+        if (isTeamNameTaken(teamName)) {
             throw new IllegalArgumentException("Team name already exists: " + teamName); //TeamAlreadyExistsException
         }
         Team team = new Team(teamName, description, owner);
@@ -46,7 +50,7 @@ public class TeamService {
         Team team = getTeamById(teamId);
         validateManagementAccess(team, currUser);
         if (newName != null && !newName.equals(team.getName())) {
-            if (teamRepository.findByName(newName).isPresent()) {
+            if (isTeamNameTaken(newName)) {
                 throw new IllegalArgumentException("Team name already exists: " + newName); //TeamAlreadyExistsException
             }
             team.setName(newName);
@@ -169,7 +173,61 @@ public class TeamService {
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //
+    // Query Methods
+
+    public Page<Team> getAllActiveTeams(Pageable pageable) {
+        return teamRepository.findByIsActiveTrue(pageable);
+    }
+
+    public Page<Team> getAllInactiveTeams(Pageable pageable) {
+        return teamRepository.findByIsActiveFalse(pageable);
+    }
+
+    public Page<Team> searchTeamsByName(String searchTerm, Pageable pageable) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return teamRepository.findByNameContainingIgnoreCase(searchTerm.trim(), pageable);
+    }
+
+    public List<Team> getActiveTeamsByOwner(User owner) {
+        return teamRepository.findByOwnerAndIsActiveTrue(owner);
+    }
+
+    public List<Team> getActiveTeamsByManager(User manager) {
+        return teamRepository.findByManagersContainingAndIsActiveTrue(manager);
+    }
+
+    public List<Team> getActiveTeamsWithManagementRights(User user) {
+        return teamRepository.findActiveTeamsWithManagementRights(user);
+    }
+
+    public List<Team> getActiveTeamsByMember(User member) {
+        return teamRepository.findByMembersContainingAndIsActiveTrue(member);
+    }
+
+    public List<Team> getAllTeamsByOwner(User owner) {
+        return teamRepository.findByOwner(owner);
+    }
+
+    public List<Team> getAllTeamsByManager(User manager) {
+        return teamRepository.findByManagersContaining(manager);
+    }
+
+    public List<Team> getAllTeamsWithManagementRights(User user) {
+        return teamRepository.findTeamsWithManagementRights(user);
+    }
+
+    public List<Team> getAllTeamsByMember(User member) {
+        return teamRepository.findByMembersContaining(member);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Access Helper Methods
+
+    public boolean hasViewAccess(Team team, User user) {
+        return user.getRole() == Role.ADMIN || team.isMember(user);
+    }
 
     public boolean hasManagementAccess(Team team, User user) {
         return team.hasManagementRights(user);
@@ -179,6 +237,33 @@ public class TeamService {
         if (!hasManagementAccess(team, user)) {
             throw new IllegalArgumentException("You don't have management rights for this team"); //TeamAccessException
         }
+    }
 
+    // duplicates using query instead of entity - may be useful later
+    public boolean userHasManagementRights(Integer teamId, User user) {
+        return teamRepository.userHasManagementRights(teamId, user);
+    }
+
+    public boolean isUserAssociatedWithTeam(Integer teamId, User user) {
+        return teamRepository.isUserAssociatedWithTeam(teamId, user);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Statistics
+
+    public long getTeamCountByOwner(User owner) {
+        return teamRepository.countTeamsByOwner(owner);
+    }
+
+    public long getTeamCountByManager(User manager) {
+        return teamRepository.countTeamsByManager(manager);
+    }
+
+    public long getTeamCountByMember(User member) {
+        return teamRepository.countTeamsByMember(member);
+    }
+
+    public boolean isTeamNameTaken(String teamName) {
+        return teamRepository.findByName(teamName).isPresent();
     }
 }
