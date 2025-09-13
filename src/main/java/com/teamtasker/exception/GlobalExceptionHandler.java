@@ -6,15 +6,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-//    @ExceptionHandler(NoHandlerFoundException.class)
-//    public String handleNoHandlerFound(NoHandlerFoundException e, Model model) {
-//        model.addAttribute("user_error_message", "Page not found.");
-//        return "error/404";
-//    }
+    //------------------------------------------------------------------------------------------------------------------
+    // User Exceptions
 
     @ExceptionHandler(UserNotFoundException.class)
     public String handleUserNotFoundException(UserNotFoundException e, Model model) {
@@ -31,10 +29,50 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidChangePasswordException.class)
     public String handleInvalidChangePasswordException(InvalidChangePasswordException e, Model model) {
-        model.addAttribute("change_password_error_message", e.getMessage());
+        model.addAttribute("change_password_error_message", e.getMessage()); // may need to change to 'user_error_message'
         return "user/change_password";
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Team Exceptions
+
+    @ExceptionHandler(TeamNotFoundException.class)
+    public String handleTeamNotFoundException(TeamNotFoundException e, Model model) {
+        model.addAttribute("user_error_message", e.getMessage());
+        return "error/404";
+    }
+
+    @ExceptionHandler(TeamAccessException.class)
+    public String handleTeamAccessException(TeamAccessException e, Model model) {
+        model.addAttribute("user_error_message", e.getMessage());
+        return "error/403";
+    }
+
+    @ExceptionHandler(TeamAlreadyExistsException.class)
+    public String handleTeamAlreadyExistsException(TeamAlreadyExistsException e, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        redirectAttributes.addFlashAttribute("conflictingTeamName", e.getTeamName());
+        return "redirect:/teams/create"; // example redirect
+    }
+
+    @ExceptionHandler(UserNotInTeamException.class)
+    public String handleUserNotInTeamException(UserNotInTeamException e, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        if (e.getTeamId() != null) {
+            return "redirect:/teams/" + e.getTeamId();
+        }
+        return "redirect:/teams";
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Generic Exceptions - commented out to avoid conflicts, uncomment if necessary
+
+//    @ExceptionHandler(NoHandlerFoundException.class)
+//    public String handleNoHandlerFound(NoHandlerFoundException e, Model model) {
+//        model.addAttribute("user_error_message", "Page not found.");
+//        return "error/404";
+//    }
+//
 //    @ExceptionHandler(Exception.class)
 //    public String handleGenericException(Exception e, Model model) {
 //        model.addAttribute("generic_error_message", "An unexpected error occurred");
