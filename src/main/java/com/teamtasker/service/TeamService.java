@@ -3,7 +3,7 @@ package com.teamtasker.service;
 import com.teamtasker.entity.Role;
 import com.teamtasker.entity.Team;
 import com.teamtasker.entity.User;
-import com.teamtasker.exception.UserNotFoundException;
+import com.teamtasker.exception.*;
 import com.teamtasker.repository.TeamRepository;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +32,18 @@ public class TeamService {
 
     public Team createTeam(String teamName, String description, User owner) {
         if (isTeamNameTaken(teamName)) {
-            throw new IllegalArgumentException("Team name already exists: " + teamName); //TeamAlreadyExistsException
+            throw new TeamAlreadyExistsException(teamName);
         }
         Team team = new Team(teamName, description, owner);
         return teamRepository.save(team);
     }
 
     public Team getTeamById(Integer teamId) {
-        return teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found. TeamID: " + teamId)); //TeamNotFoundException
+        return teamRepository.findById(teamId).orElseThrow(() -> new TeamNotFoundException("Team not found. TeamID: " + teamId));
     }
 
     public Team getTeamByName(String teamName) {
-        return teamRepository.findByName(teamName).orElseThrow(() -> new IllegalArgumentException("Team not found. Name: " + teamName)); //TeamNotFoundException
+        return teamRepository.findByName(teamName).orElseThrow(() -> new TeamNotFoundException("Team not found. Name: " + teamName));
     }
 
     public Team updateTeam(Integer teamId, String newName, String newDescription, User currUser) {
@@ -51,7 +51,7 @@ public class TeamService {
         validateManagementAccess(team, currUser);
         if (newName != null && !newName.equals(team.getName())) {
             if (isTeamNameTaken(newName)) {
-                throw new IllegalArgumentException("Team name already exists: " + newName); //TeamAlreadyExistsException
+                throw new TeamAlreadyExistsException(newName);
             }
             team.setName(newName);
         }
@@ -65,7 +65,7 @@ public class TeamService {
     public void deleteTeam(Integer teamId, User currUser) {
         Team team =  getTeamById(teamId);
         if (!team.isOwner(currUser) && currUser.getRole() != Role.ADMIN) {
-            throw new IllegalArgumentException("Only team owners or admins can delete teams"); //TeamAccessException
+            throw new TeamAccessException("Only team owners or admins can delete teams");
         }
         teamRepository.delete(team);
     }
@@ -107,7 +107,7 @@ public class TeamService {
                 -> new UserNotFoundException("User not found. Username: " + username));
 
         if (!team.isMember(memberToRemove)) {
-            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
+            throw new UserNotInTeamException(username, team.getName(), teamId);
         }
         if (team.isOwner(memberToRemove)) {
             throw new IllegalArgumentException("Cannot remove owner from team");
@@ -120,13 +120,13 @@ public class TeamService {
     public void promoteToManager(Integer teamId, String username, User currUser) {
         Team team = getTeamById(teamId);
         if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
-            throw new IllegalArgumentException("Only team owners or admins can promote members to managers"); // TeamAccessException
+            throw new TeamAccessException("Only team owners or admins can promote members to managers");
         }
         User userToPromote = userRepository.findByUsername(username).orElseThrow(()
                 -> new UserNotFoundException("User not found. Username: " + username));
 
         if (!team.isMember(userToPromote)) {
-            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
+            throw new UserNotInTeamException(username,  team.getName(), teamId);
         }
         if (team.isManager(userToPromote)) {
             throw new IllegalArgumentException("User is already a manager of this team");
@@ -138,7 +138,7 @@ public class TeamService {
     public void demoteFromManager(Integer teamId, String username, User currUser) {
         Team team = getTeamById(teamId);
         if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
-            throw new IllegalArgumentException("Only team owners or admins can demote members from managers"); // TeamAccessException
+            throw new TeamAccessException("Only team owners or admins can demote members from managers");
         }
         User userToDemote = userRepository.findByUsername(username).orElseThrow(()
                 -> new UserNotFoundException("User not found. Username: " + username));
@@ -157,13 +157,13 @@ public class TeamService {
     public void transferOwnership(Integer teamId, String newOwnerUsername, User currUser) {
         Team team = getTeamById(teamId);
         if (!team.isOwner(currUser) &&  currUser.getRole() != Role.ADMIN) {
-            throw new IllegalArgumentException("Only team owners or admins can transfer team ownership"); // TeamAccessException
+            throw new TeamAccessException("Only team owners or admins can transfer team ownership");
         }
         User newOwner = userRepository.findByUsername(newOwnerUsername).orElseThrow(()
                 -> new UserNotFoundException("User not found. Username: " + newOwnerUsername));
 
         if (!team.isMember(newOwner)) {
-            throw new IllegalArgumentException("User is not a member of this team"); // UserNotInTeamException
+            throw new UserNotInTeamException(newOwnerUsername, team.getName(), teamId);
         }
         if (team.isOwner(newOwner)) {
             throw new IllegalArgumentException("User is already the owner of this team");
@@ -235,7 +235,7 @@ public class TeamService {
 
     private void validateManagementAccess(Team team, User user) {
         if (!hasManagementAccess(team, user)) {
-            throw new IllegalArgumentException("You don't have management rights for this team"); //TeamAccessException
+            throw new TeamAccessException("You don't have management rights for this team");
         }
     }
 
