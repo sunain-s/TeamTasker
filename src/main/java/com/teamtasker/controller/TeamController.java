@@ -14,10 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -98,6 +95,14 @@ public class TeamController {
     }
 
     @GetMapping("/create")
+    public String showCreateTeamForm(Model model) {
+        if (!model.containsAttribute("team")) {
+            model.addAttribute("team", new Team());
+        }
+        return "teams/create";
+    }
+
+    @GetMapping("/create")
     public String createTeam(@Valid @ModelAttribute("team") Team team,
                              BindingResult result,
                              Authentication authentication,
@@ -117,9 +122,24 @@ public class TeamController {
         return "redirect:/teams/" + createdTeam.getId();
     }
 
+    @GetMapping("/{teamId}")
+    public String viewTeam(@PathVariable int teamId, Model model, Authentication authentication) {
+        User currUser = getCurrentUser(authentication);
+        Team team = teamService.getTeamById(teamId);
+        if (!teamService.hasViewAccess(team, currUser)) {
+            model.addAttribute("user_error_message", "You don't have access to this team");
+            return "error/403";
+        }
+
+        model.addAttribute("team", team);
+        model.addAttribute("currentUser", currUser);
+        model.addAttribute("hasManagementAccess", teamService.hasManagementAccess(team, currUser));
+        model.addAttribute("isOwner", team.isOwner(currUser));
+        return "teams/view";
+    }
+
     private User getCurrentUser(Authentication authentication) {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         return customUserDetails.getUser();
     }
-
 }
