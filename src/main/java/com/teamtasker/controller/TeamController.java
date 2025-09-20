@@ -32,12 +32,16 @@ public class TeamController {
         this.userService = userService;
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Team Listing
+
     @GetMapping
     public String listTeams(@RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "10") int size,
                             @RequestParam(defaultValue = "active") String filter,
                             Model model,
                             Authentication authentication) {
+
         User currUser = getCurrentUser(authentication);
         Pageable pageable = PageRequest.of(page, size);
 
@@ -57,6 +61,7 @@ public class TeamController {
     public String listMyTeams(@RequestParam(defaultValue = "active") String filter,
                               Model model,
                               Authentication authentication) {
+
         User currUser = getCurrentUser(authentication);
         List<Team> ownedTeams;
         List<Team> managerTeams;
@@ -94,6 +99,9 @@ public class TeamController {
         return "teams/my-teams";
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Create team
+
     @GetMapping("/create")
     public String showCreateTeamForm(Model model) {
         if (!model.containsAttribute("team")) {
@@ -107,6 +115,7 @@ public class TeamController {
                              BindingResult result,
                              Authentication authentication,
                              RedirectAttributes redirectAttributes) {
+
         if (teamService.isTeamNameTaken(team.getName())) {
             result.rejectValue("name", "isNameTaken", "Team name already exists");
         }
@@ -122,8 +131,11 @@ public class TeamController {
         return "redirect:/teams/" + createdTeam.getId();
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // View + Edit team
+
     @GetMapping("/{teamId}")
-    public String viewTeam(@PathVariable int teamId, Model model, Authentication authentication) {
+    public String viewTeam(@PathVariable Integer teamId, Model model, Authentication authentication) {
         User currUser = getCurrentUser(authentication);
         Team team = teamService.getTeamById(teamId);
         if (!teamService.hasViewAccess(team, currUser)) {
@@ -136,6 +148,47 @@ public class TeamController {
         model.addAttribute("hasManagementAccess", teamService.hasManagementAccess(team, currUser));
         model.addAttribute("isOwner", team.isOwner(currUser));
         return "teams/view";
+    }
+
+    @GetMapping("/{teamId}/edit")
+    public String editTeam(@PathVariable Integer teamId, Model model, Authentication authentication) {
+        User currUser = getCurrentUser(authentication);
+        Team team = teamService.getTeamById(teamId);
+        if (!teamService.hasManagementAccess(team, currUser)) {
+            model.addAttribute("user_error_message", "You don't have permission to edit this team");
+            return "error/403";
+        }
+        if (!model.containsAttribute("team")) {
+            model.addAttribute("team", team);
+        }
+        return "teams/edit";
+    }
+
+    @PostMapping("/{teamId}/edit")
+    public String updateTeam(@PathVariable Integer teamId,
+                             @Valid @ModelAttribute("team") Team updatedTeam,
+                             BindingResult result,
+                             Authentication authentication,
+                             RedirectAttributes redirectAttributes) {
+
+        User currUser = getCurrentUser(authentication);
+        Team existingTeam = teamService.getTeamById(teamId);
+        if (!updatedTeam.getName().equals(existingTeam.getName()) && teamService.isTeamNameTaken(updatedTeam.getName())) {
+            result.rejectValue("name", "isNameTaken", "Team name already exists");
+        }
+        if (result.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.team", result);
+            redirectAttributes.addFlashAttribute("team", updatedTeam);
+            return "redirect:/teams/" + teamId + "/edit";
+        }
+
+        try {
+            teamService.updateTeam(teamId, updatedTeam.getName(), updatedTeam.getDescription(), currUser);
+            redirectAttributes.addFlashAttribute("updatedTeam", "Team: '" + updatedTeam.getName() + "' successfully updated!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        }
+        return "redirect:/teams/" + teamId;
     }
 
     private User getCurrentUser(Authentication authentication) {
