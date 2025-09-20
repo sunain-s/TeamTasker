@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <title>Page Not Found</title>
+    <title>Access Forbidden</title>
     <style>
         body { text-align: center; font-family: sans-serif; }
         .container { margin-top: 100px; }
@@ -10,7 +10,7 @@
 <body>
 <div class="container">
     <h1>403 - Forbidden</h1>
-    <p th:text="${user_error_message} ?: 'You don’t have permission to access this page.'"></p>
+    <p th:text="${user_error_message} ?: 'You don't have permission to access this page.'"></p>
     <a href="/" style="text-decoration: underline;">Return Home</a>
 </div>
 </body>

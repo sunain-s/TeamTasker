@@ -21,16 +21,24 @@ public interface TeamRepository extends JpaRepository<Team,Integer> {
 
     List<Team> findByOwner(User owner);
     List<Team> findByOwnerAndIsActiveTrue(User owner);
+    List<Team> findByOwnerAndIsActiveFalse(User owner);
+
     List<Team> findByMembersContaining(User user);
     List<Team> findByMembersContainingAndIsActiveTrue(User user);
+    List<Team> findByMembersContainingAndIsActiveFalse(User user);
+
     List<Team> findByManagersContaining(User user);
     List<Team> findByManagersContainingAndIsActiveTrue(User user);
+    List<Team> findByManagersContainingAndIsActiveFalse(User user);
 
     @Query("SELECT t FROM Team t WHERE t.owner = :user OR :user MEMBER OF t.managers")
     List<Team> findTeamsWithManagementRights(@Param("user") User user);
 
     @Query("SELECT t FROM Team t WHERE (t.owner = :user OR :user MEMBER OF t.managers) AND t.isActive = true")
     List<Team> findActiveTeamsWithManagementRights(@Param("user") User user);
+
+    @Query("SELECT t FROM Team t WHERE (t.owner = :user OR :user MEMBER OF t.managers) AND t.isActive = false")
+    List<Team> findInactiveTeamsWithManagementRights(@Param("user") User user);
 
     @Query("SELECT COUNT(t) FROM Team t WHERE t.owner = :user")
     long countTeamsByOwner(@Param("user") User user);

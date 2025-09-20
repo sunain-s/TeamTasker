@@ -175,6 +175,10 @@ public class TeamService {
     //------------------------------------------------------------------------------------------------------------------
     // Query Methods
 
+    public Page<Team> getAllTeams(Pageable pageable) {
+        return teamRepository.findAll(pageable);
+    }
+
     public Page<Team> getAllActiveTeams(Pageable pageable) {
         return teamRepository.findByIsActiveTrue(pageable);
     }
@@ -220,6 +224,22 @@ public class TeamService {
 
     public List<Team> getAllTeamsByMember(User member) {
         return teamRepository.findByMembersContaining(member);
+    }
+
+    public List<Team> getInactiveTeamsByOwner(User owner) {
+        return teamRepository.findByOwnerAndIsActiveFalse(owner);
+    }
+
+    public List<Team> getInactiveTeamsByManager(User manager) {
+        return teamRepository.findByManagersContainingAndIsActiveFalse(manager);
+    }
+
+    public List<Team> getInactiveTeamsWithManagementRights(User user) {
+        return teamRepository.findInactiveTeamsWithManagementRights(user);
+    }
+
+    public List<Team> getInactiveTeamsByMember(User member) {
+        return teamRepository.findByMembersContainingAndIsActiveFalse(member);
     }
 
     //------------------------------------------------------------------------------------------------------------------

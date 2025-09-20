@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidChangePasswordException.class)
     public String handleInvalidChangePasswordException(InvalidChangePasswordException e, Model model) {
-        model.addAttribute("change_password_error_message", e.getMessage()); // may need to change to 'user_error_message'
+        model.addAttribute("user_error_message", e.getMessage());
         return "user/change_password";
     }
 
