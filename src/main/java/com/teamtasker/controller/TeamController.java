@@ -100,7 +100,7 @@ public class TeamController {
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // Create team
+    // Create + Delete Team
 
     @GetMapping("/create")
     public String showCreateTeamForm(Model model) {
@@ -127,12 +127,27 @@ public class TeamController {
 
         User currUser = getCurrentUser(authentication);
         Team createdTeam = teamService.createTeam(team.getName(), team.getDescription(), currUser);
-        redirectAttributes.addFlashAttribute("createdTeam", "Team: '" + createdTeam.getName() + "' created successfully!");
+        redirectAttributes.addFlashAttribute("createdTeam", "Team: '" + createdTeam.getName() + "' created successfully");
         return "redirect:/teams/" + createdTeam.getId();
     }
 
+    @PostMapping("/{teamId}/delete")
+    public String deleteTeam(@PathVariable("teamId") Integer teamId, Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            User currUser = getCurrentUser(authentication);
+            Team team = teamService.getTeamById(teamId);
+            String teamName = team.getName();
+            teamService.deleteTeam(teamId, currUser);
+            redirectAttributes.addFlashAttribute("success_message", "Team: '" + teamName + "' deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+            return "redirect:/teams/" + teamId;
+        }
+        return "redirect:/teams";
+    }
+
     //------------------------------------------------------------------------------------------------------------------
-    // View + Edit team
+    // View + Edit Team
 
     @GetMapping("/{teamId}")
     public String viewTeam(@PathVariable Integer teamId, Model model, Authentication authentication) {
@@ -190,6 +205,9 @@ public class TeamController {
         }
         return "redirect:/teams/" + teamId;
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Team Activation
 
     private User getCurrentUser(Authentication authentication) {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
