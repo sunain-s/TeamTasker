@@ -127,7 +127,7 @@ public class TeamController {
 
         User currUser = getCurrentUser(authentication);
         Team createdTeam = teamService.createTeam(team.getName(), team.getDescription(), currUser);
-        redirectAttributes.addFlashAttribute("createdTeam", "Team: '" + createdTeam.getName() + "' created successfully");
+        redirectAttributes.addFlashAttribute("createdTeam", "Team: '" + createdTeam.getName() + "' successfully  created");
         return "redirect:/teams/" + createdTeam.getId();
     }
 
@@ -138,7 +138,7 @@ public class TeamController {
             Team team = teamService.getTeamById(teamId);
             String teamName = team.getName();
             teamService.deleteTeam(teamId, currUser);
-            redirectAttributes.addFlashAttribute("success_message", "Team: '" + teamName + "' deleted successfully");
+            redirectAttributes.addFlashAttribute("success_message", "Team: '" + teamName + "' successfully deleted");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
             return "redirect:/teams/" + teamId;
@@ -199,7 +199,7 @@ public class TeamController {
 
         try {
             teamService.updateTeam(teamId, updatedTeam.getName(), updatedTeam.getDescription(), currUser);
-            redirectAttributes.addFlashAttribute("updatedTeam", "Team: '" + updatedTeam.getName() + "' successfully updated!");
+            redirectAttributes.addFlashAttribute("success_message", "Team successfully updated");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
         }
@@ -208,6 +208,30 @@ public class TeamController {
 
     //------------------------------------------------------------------------------------------------------------------
     // Team Activation
+
+    @PostMapping("/{teamId}/deactivate")
+    public String deactivateTeam(@PathVariable Integer teamId, Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            User currUser = getCurrentUser(authentication);
+            teamService.deactivateTeam(teamId, currUser);
+            redirectAttributes.addFlashAttribute("success_message", "Team successfully deactivated");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        }
+        return "redirect:/teams/" + teamId;
+    }
+
+    @PostMapping("/{teamId}/reactivate")
+    public String reactivateTeam(@PathVariable Integer teamId, Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            User currUser = getCurrentUser(authentication);
+            teamService.reactivateTeam(teamId, currUser);
+            redirectAttributes.addFlashAttribute("success_message", "Team successfully reactivated");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        }
+        return "redirect:/teams/" + teamId;
+    }
 
     private User getCurrentUser(Authentication authentication) {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
