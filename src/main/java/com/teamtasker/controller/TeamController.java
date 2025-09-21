@@ -237,28 +237,62 @@ public class TeamController {
     // Member Management
 
     @GetMapping("/{teamId}/member/add")
-    public String showAddMemberForm(@PathVariable Integer teamId, Model model, Authentication authentication) {
+    public String showAddMemberForm(@PathVariable Integer teamId,
+                                    @RequestParam(required = false) String searchTerm,
+                                    @RequestParam(defaultValue = "0") int page,
+                                    @RequestParam(defaultValue = "20") int size,
+                                    Model model,
+                                    Authentication authentication) {
+
         User currUser = getCurrentUser(authentication);
         Team team = teamService.getTeamById(teamId);
         if (!teamService.hasManagementAccess(team, currUser)) {
             model.addAttribute("user_error_message", "You don't have permission to add members to this team");
             return "error/403";
         }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> availableUsers;
+        if  (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            availableUsers = teamService.searchUsersNotInTeam(teamId, searchTerm, pageable);
+        } else {
+            availableUsers = teamService.getUsersNotInTeam(teamId, pageable);
+        }
+
         model.addAttribute("team", team);
-        model.addAttribute("availableUsers", teamService.getUsersNotInTeam(teamId));
+        model.addAttribute("availableUsers", availableUsers);
+        model.addAttribute("searchTerm", searchTerm);
         return "teams/add_member";
     }
 
     @PostMapping("/{teamId}/members/add")
     public String addMember(@PathVariable Integer teamId,
-                            @RequestParam String username,
+                            @RequestParam("usernames") List<String> usernames,
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
 
         try {
             User currUser = getCurrentUser(authentication);
-            teamService.addMemberToTeam(teamId, username, currUser);
-            redirectAttributes.addFlashAttribute("success_message", "Member successfully added to the team");
+            int successCount = 0;
+            StringBuilder errors = new StringBuilder();
+            for (String username : usernames) {
+                try {
+                    teamService.addMemberToTeam(teamId, username, currUser);
+                    successCount++;
+                } catch (Exception e) {
+                    if (!errors.isEmpty()) {
+                        errors.append(", ");
+                    }
+                    errors.append(username).append(" (").append(e.getMessage()).append(")");
+                }
+            }
+
+            if (successCount > 0) {
+                redirectAttributes.addFlashAttribute("success_message", successCount + " member(s) successfully added");
+            }
+            if (!errors.isEmpty()) {
+                redirectAttributes.addFlashAttribute("user_error_message", "Failed to add: " + errors);
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
         }
