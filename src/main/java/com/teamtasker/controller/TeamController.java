@@ -233,6 +233,40 @@ public class TeamController {
         return "redirect:/teams/" + teamId;
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Member Management
+
+    @GetMapping("/{teamId}/member/add")
+    public String showAddMemberForm(@PathVariable Integer teamId, Model model, Authentication authentication) {
+        User currUser = getCurrentUser(authentication);
+        Team team = teamService.getTeamById(teamId);
+        if (!teamService.hasManagementAccess(team, currUser)) {
+            model.addAttribute("user_error_message", "You don't have permission to add members to this team");
+            return "error/403";
+        }
+        model.addAttribute("team", team);
+        model.addAttribute("availableUsers", teamService.getUsersNotInTeam(teamId));
+        return "teams/add_member";
+    }
+
+    @PostMapping("/{teamId}/members/add")
+    public String addMember(@PathVariable Integer teamId,
+                            @RequestParam String username,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
+
+        try {
+            User currUser = getCurrentUser(authentication);
+            teamService.addMemberToTeam(teamId, username, currUser);
+            redirectAttributes.addFlashAttribute("success_message", "Member successfully added to the team");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("user_error_message", e.getMessage());
+        }
+        return "redirect:/teams/" + teamId;
+    }
+
+
+
     private User getCurrentUser(Authentication authentication) {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         return customUserDetails.getUser();

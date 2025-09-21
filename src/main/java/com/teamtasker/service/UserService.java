@@ -128,10 +128,6 @@ public class UserService {
     //------------------------------------------------------------------------------------------------------------------
     // Statistics
 
-    public Page<User> getUsersNotInTeam(Integer teamId, Pageable pageable) {
-        return userRepository.findUsersNotInTeam(teamId, pageable);
-    }
-
     public long getUserCountByRole(Role role) {
         return userRepository.countByRole(role);
     }

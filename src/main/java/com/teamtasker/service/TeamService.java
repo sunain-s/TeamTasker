@@ -8,10 +8,12 @@ import com.teamtasker.repository.TeamRepository;
 import com.teamtasker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -242,6 +244,25 @@ public class TeamService {
         return teamRepository.findByMembersContainingAndIsActiveFalse(member);
     }
 
+    public Page<User> searchUsersNotInTeam(Integer teamId, String searchTerm, Pageable pageable) {
+        return userRepository.searchUsersNotInTeam(teamId, searchTerm, pageable);
+    }
+
+    public List<User> getRemovableMembers(Integer teamId, String searchTerm) {
+        Team team = getTeamById(teamId);
+        List<User> members = new ArrayList<>(team.getMembers());
+        members.removeIf(user -> team.isOwner(user));
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            String searchLower = searchTerm.toLowerCase();
+            members.removeIf(user -> !user.getFirstName().toLowerCase().contains(searchLower) &&
+                    !user.getLastName().toLowerCase().contains(searchLower) &&
+                    !user.getUsername().toLowerCase().contains(searchLower) &&
+                    !(user.getFirstName() + " " + user.getLastName()).toLowerCase().contains(searchLower)
+            );
+        }
+        return members;
+    }
+
     //------------------------------------------------------------------------------------------------------------------
     // Access Helper Methods
 
@@ -270,6 +291,15 @@ public class TeamService {
 
     //------------------------------------------------------------------------------------------------------------------
     // Statistics
+
+    public Page<User> getUsersNotInTeam(Integer teamId, Pageable pageable) {
+        return userRepository.findUsersNotInTeam(teamId, pageable);
+    }
+
+    public List<User> getUsersNotInTeam(Integer teamId) {
+        Pageable pageable = PageRequest.of(0, 1000);
+        return userRepository.findUsersNotInTeam(teamId, pageable).getContent();
+    }
 
     public long getTeamCountByOwner(User owner) {
         return teamRepository.countTeamsByOwner(owner);

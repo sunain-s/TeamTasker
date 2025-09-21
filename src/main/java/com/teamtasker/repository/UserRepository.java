@@ -23,6 +23,13 @@ public interface UserRepository extends JpaRepository<User,Integer> {
     @Query("SELECT u FROM User u WHERE u NOT IN (SELECT m FROM Team t JOIN t.members m WHERE t.id = :teamId)")
     Page<User> findUsersNotInTeam(@Param("teamId") Integer teamId, Pageable pageable);
 
+    @Query("SELECT u FROM User u WHERE u NOT IN (SELECT m FROM Team t JOIN t.members m WHERE t.id = :teamId) AND (" +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<User> searchUsersNotInTeam(@Param("teamId") Integer teamId, @Param("searchTerm") String searchTerm, Pageable pageable);
+
     @Query("SELECT u FROM User u WHERE " +
             "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
